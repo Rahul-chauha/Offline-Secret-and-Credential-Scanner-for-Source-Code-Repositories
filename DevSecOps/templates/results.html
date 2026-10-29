@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Results: {{ scan.project_name }} | Offline Secret Scanner{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 20px; padding-bottom: 60px;">
+  <!-- Breadcrumb Navigation -->
+  <div style="margin-bottom: 16px;">
+    <a href="{{ url_for('index') }}" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Back to Dashboard &amp; Scan History
+    </a>
+  </div>
+
+  <!-- Scan Overview Header Card -->
+  <div class="result-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+      
+      <!-- Project & Grade Shield -->
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div class="grade-badge-large grade-{{ scan.rating_grade.lower() }}">
+          <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85;">Grade</span>
+          <span style="font-size: 28px; font-weight: 900; line-height: 1;">{{ scan.rating_grade }}</span>
+        </div>
+
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px;">
+            <h1 style="font-size: 26px; font-weight: 800; color: #fff; margin: 0;">{{ scan.project_name }}</h1>
+            <span class="badge-code" style="font-size: 12px;">ID: {{ scan.scan_id[:8] }}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-secondary); flex-wrap: wrap;">
+            <span>Scan ID: <code style="color: var(--accent-cyan); font-family: var(--font-mono);">{{ scan.scan_id }}</code></span>
+            <span>&bull;</span>
+            <span>Scanned: <strong style="color: var(--text-light);">{{ scan.created_at }}</strong></span>
+            <span>&bull;</span>
+            <span>Files Analyzed: <strong style="color: var(--text-light);">{{ scan.total_files }}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="{{ url_for('report', scan_id=scan.scan_id) }}" class="btn-primary" style="padding: 9px 18px; font-size: 13.5px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          Printable Report
+        </a>
+        <a href="{{ url_for('export_json', scan_id=scan.scan_id) }}" class="btn-outline" style="padding: 9px 16px; font-size: 13.5px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export JSON
+        </a>
+        <a href="{{ url_for('index') }}#upload-section" class="btn-outline" style="padding: 9px 16px; font-size: 13.5px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Scan New
+        </a>
+      </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="metrics-grid">
+      <div class="metric-card metric-card-score">
+        <div class="metric-val" style="color: {% if scan.security_score >= 90 %}var(--accent-emerald){% elif scan.security_score >= 70 %}var(--accent-amber){% else %}var(--sev-critical){% endif %};">
+          {{ scan.security_score }}<span style="font-size: 16px; font-weight: 500; color: var(--text-muted);">/100</span>
+        </div>
+        <div class="metric-title">Security Score</div>
+      </div>
+
+      <div class="metric-card metric-card-critical">
+        <div class="metric-val" style="color: var(--sev-critical);">{{ scan.critical_count }}</div>
+        <div class="metric-title">Critical Secrets</div>
+      </div>
+
+      <div class="metric-card metric-card-high">
+        <div class="metric-val" style="color: var(--sev-high);">{{ scan.high_count }}</div>
+        <div class="metric-title">High Severity</div>
+      </div>
+
+      <div class="metric-card metric-card-medium">
+        <div class="metric-val" style="color: var(--sev-medium);">{{ scan.medium_count }}</div>
+        <div class="metric-title">Medium Severity</div>
+      </div>
+
+      <div class="metric-card metric-card-low">
+        <div class="metric-val" style="color: var(--sev-low);">{{ scan.low_count }}</div>
+        <div class="metric-title">Low (Placeholders)</div>
+      </div>
+
+      <div class="metric-card metric-card-total">
+        <div class="metric-val" style="color: #ffffff;">{{ scan.total_findings }}</div>
+        <div class="metric-title">Total Findings</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="filter-toolbar">
+    <div class="filter-group">
+      <button class="filter-btn active" data-filter="all">
+        All ({{ scan.findings|length }})
+      </button>
+      <button class="filter-btn" data-filter="Critical">
+        <span class="filter-dot dot-red"></span>
+        Critical ({{ scan.critical_count }})
+      </button>
+      <button class="filter-btn" data-filter="High">
+        <span class="filter-dot dot-yellow" style="background: var(--sev-high);"></span>
+        High ({{ scan.high_count }})
+      </button>
+      <button class="filter-btn" data-filter="Medium">
+        <span class="filter-dot dot-yellow"></span>
+        Medium ({{ scan.medium_count }})
+      </button>
+      <button class="filter-btn" data-filter="Low">
+        <span class="filter-dot dot-green" style="background: var(--sev-low);"></span>
+        Low ({{ scan.low_count }})
+      </button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+      <span id="filterCounter" style="font-size: 13px; color: var(--text-secondary);">
+        Showing <strong id="visibleCount" style="color: #fff;">{{ scan.findings|length }}</strong> of {{ scan.findings|length }} findings
+      </span>
+      <input type="text" id="findingSearch" class="search-box" placeholder="Search secrets, files, or rules...">
+    </div>
+  </div>
+
+  <!-- Findings List -->
+  {% if scan.findings %}
+    <div id="findingsContainer" style="display: flex; flex-direction: column;">
+      {% for f in scan.findings %}
+        <div class="finding-card severity-border-{{ f.severity.lower() }}" data-severity="{{ f.severity }}">
+          <div class="finding-top-bar">
+            <div class="finding-badges">
+              <span class="badge badge-{{ f.severity.lower() }}">
+                <span class="filter-dot dot-{{ 'red' if f.severity == 'Critical' else 'yellow' if f.severity in ['High', 'Medium'] else 'green' }}"></span>
+                {{ f.severity }}{% if f.confidence == 'Low' %} (Requires Review){% endif %}
+              </span>
+              <span class="badge-code">{{ f.rule_id }}</span>
+              <span class="badge-category">{{ f.secret_type or 'Secret' }}</span>
+              <span class="meta-pill">Detection: {{ f.detection_method or 'Pattern Match' }}</span>
+              <span class="meta-pill">Confidence: {{ f.confidence or 'High' }}</span>
+            </div>
+
+            <div class="finding-location">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+              <span>{{ f.file_path }}:{{ f.line_number }}</span>
+              <button type="button" class="btn-copy-path" data-path="{{ f.file_path }}:{{ f.line_number }}" title="Copy file path & line">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <h3 class="finding-headline">{{ f.title }}</h3>
+          <p class="finding-description">{{ f.description }}</p>
+
+          {% if f.code_snippet %}
+            <div class="snippet-terminal">
+              <div class="snippet-terminal-bar">
+                <div class="terminal-dots">
+                  <span class="terminal-dot dot-red"></span>
+                  <span class="terminal-dot dot-yellow"></span>
+                  <span class="terminal-dot dot-green"></span>
+                </div>
+                <div class="terminal-label">Detected Snippet &bull; Line {{ f.line_number }}</div>
+                <button type="button" class="btn-copy-snippet" data-snippet="{{ f.code_snippet }}">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  <span>Copy Snippet</span>
+                </button>
+              </div>
+              <pre class="code-snippet"><code>{{ f.code_snippet }}</code></pre>
+            </div>
+          {% endif %}
+
+          {% if f.remediation %}
+            <div class="remediation-box">
+              <div class="remediation-header">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>REMEDIATION GUIDANCE</span>
+              </div>
+              <div class="remediation-text">{{ f.remediation }}</div>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Empty Filter Message -->
+    <div id="noMatchMessage" class="empty-findings-state" style="display: none;">
+      <h4>No Matching Findings Found</h4>
+      <p>Try clearing your search query or selecting a different severity category above.</p>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div id="paginationBar" class="pagination-container" style="display: none;">
+      <div id="paginationSummary" class="pagination-info">
+        Showing <strong id="pageRange" style="color: #fff;">1–15</strong> of <strong id="totalMatching" style="color: #fff;">{{ scan.findings|length }}</strong> findings
+      </div>
+
+      <div class="pagination-controls">
+        <button type="button" id="prevPageBtn" class="page-btn" title="Previous Page">&laquo; Prev</button>
+        <div id="pageNumberButtons" class="pagination-controls"></div>
+        <button type="button" id="nextPageBtn" class="page-btn" title="Next Page">Next &raquo;</button>
+      </div>
+
+      <div class="page-size-selector">
+        <span>Per page:</span>
+        <select id="pageSizeSelect" class="page-size-select">
+          <option value="15" selected>15</option>
+          <option value="30">30</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="card" style="padding: 50px 30px; text-align: center;">
+      <div style="width: 60px; height: 60px; margin: 0 auto 16px; background: rgba(16, 185, 129, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent-emerald);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h3 style="font-size: 22px; color: #fff; margin-bottom: 8px;">Zero Sensitive Credentials Detected</h3>
+      <p style="color: var(--text-secondary); max-width: 540px; margin: 0 auto 20px; line-height: 1.6;">
+        The scanner analyzed all repository files and found no exposed API keys, access tokens, unencrypted private keys, passwords, or high-entropy secrets.
+      </p>
+      <a href="{{ url_for('index') }}" class="btn-primary" style="display: inline-flex;">
+        Scan Another Repository
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

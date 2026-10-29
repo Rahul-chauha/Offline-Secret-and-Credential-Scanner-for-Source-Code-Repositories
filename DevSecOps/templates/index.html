@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Offline Secret and Credential Scanner for Source Code Repositories{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+      Offline Security Auditing Tool • II-Year Mini Project 2026–27
+    </div>
+    <h1 class="hero-title">
+      Offline Secret & Credential <span>Source Code Scanner</span>
+    </h1>
+    <p class="hero-subtitle">
+      Scan source code repositories and ZIP archives for accidentally exposed API keys, access tokens, passwords,
+      private keys, and database credentials using pattern-based detection and Shannon entropy analysis.
+    </p>
+
+    <!-- Global Statistics Banner -->
+    <div class="stats-banner">
+      <div class="stat-item">
+        <div class="stat-number" style="color: var(--accent-cyan);">{{ total_scans }}</div>
+        <div class="stat-label">Repositories Audited</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" style="color: var(--accent-rose);">{{ total_findings_detected }}</div>
+        <div class="stat-label">Potential Secrets Found</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" style="color: var(--accent-emerald);">{{ avg_score }}%</div>
+        <div class="stat-label">Avg Security Score</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" style="color: var(--accent-indigo);">Hybrid</div>
+        <div class="stat-label">Pattern + Entropy Engine</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Upload & Audit Section -->
+  <div id="upload-section" class="upload-card">
+    <div
+      style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h2 style="font-size: 22px; margin-bottom: 4px;">Ingest Source Repository or ZIP Archive</h2>
+        <p style="color: var(--text-secondary); font-size: 14px;">
+          Select a source code <strong style="color: #fff;">.zip</strong> archive or provide a local directory path to
+          perform a safe offline secret audit.
+        </p>
+      </div>
+      <span class="meta-pill" style="color: var(--accent-cyan); font-weight: 600;">100% Local • Zero Data Upload</span>
+    </div>
+
+    <form id="uploadForm" action="{{ url_for('scan_project') }}" method="POST" enctype="multipart/form-data">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div>
+          <label for="project_name"
+            style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+            Project / Repository Name (Optional)
+          </label>
+          <input type="text" name="project_name" id="project_name" placeholder="e.g. backend-api-service"
+            style="width: 100%; background: rgba(10, 14, 26, 0.6); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px 16px; color: #fff; font-size: 14px; outline: none;">
+        </div>
+
+        <div>
+          <label for="local_folder_path"
+            style="display: block; font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;">
+            Or Local Directory Path on Server (Optional)
+          </label>
+          <input type="text" name="local_folder_path" id="local_folder_path"
+            placeholder="e.g. D:\DevSecOps\samples\sample_repo"
+            style="width: 100%; background: rgba(10, 14, 26, 0.6); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px 16px; color: #fff; font-size: 14px; outline: none;">
+        </div>
+      </div>
+
+      <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <h3 class="dropzone-title">Drag & Drop Repository ZIP File Here</h3>
+        <p class="dropzone-desc">Accepts ZIP files containing source code repositories. Max archive size 500MB.</p>
+        <button type="button" id="browseBtn" class="btn-primary" style="display: inline-flex; cursor: pointer;">
+          Browse File
+        </button>
+        <input type="file" id="project_zip" name="project_zip" accept=".zip" style="display: none;">
+        <div id="selectedFileName"
+          style="margin-top: 14px; font-size: 13px; color: var(--accent-cyan); font-weight: 600; display: none;"></div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+        <button type="submit" id="submitBtn" class="btn-primary" style="padding: 12px 28px; font-size: 15px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Run Offline Security Scan
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- How It Works Architecture Section -->
+  <div style="margin-top: 40px; margin-bottom: 40px;">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Core Detection Pipeline</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+
+      <div
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px;">
+        <div style="color: var(--accent-cyan); font-weight: 700; font-size: 13px; margin-bottom: 6px;">01. SAFE HANDLING
+        </div>
+        <h3 style="font-size: 15px; margin-bottom: 6px;">Input Ingestion</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.5;">
+          Protects against Zip-Slip traversal and Zip-Bomb attacks. Skips binary files and dependency folders.
+        </p>
+      </div>
+
+      <div
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px;">
+        <div style="color: var(--accent-indigo); font-weight: 700; font-size: 13px; margin-bottom: 6px;">02. PATTERNS
+        </div>
+        <h3 style="font-size: 15px; margin-bottom: 6px;">Pattern Matching</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.5;">
+          Matches known signatures: AWS, GitHub tokens, private keys, database URIs, Slack, OpenAI, Stripe, etc.
+        </p>
+      </div>
+
+      <div
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px;">
+        <div style="color: var(--accent-amber); font-weight: 700; font-size: 13px; margin-bottom: 6px;">03. ENTROPY
+        </div>
+        <h3 style="font-size: 15px; margin-bottom: 6px;">Shannon Entropy</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.5;">
+          Calculates information randomness to catch high-entropy credentials that evade regular patterns.
+        </p>
+      </div>
+
+      <div
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px;">
+        <div style="color: var(--accent-emerald); font-weight: 700; font-size: 13px; margin-bottom: 6px;">04. FILTERING
+        </div>
+        <h3 style="font-size: 15px; margin-bottom: 6px;">False-Positive Filter</h3>
+        <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.5;">
+          Suppresses dummy placeholders, template configs (.env.example), and test suite mock credentials.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Recent Scans History -->
+  <div id="recent-scans" class="card" style="margin-top: 30px;">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div
+          style="width: 32px; height: 32px; background: rgba(6, 182, 212, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent-cyan);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <h2 class="card-title">Recent Security Scan History</h2>
+      </div>
+      <span class="meta-pill" style="color: var(--accent-cyan); font-weight: 600;">{{ recent_scans|length }} Scans
+        Logged</span>
+    </div>
+
+    {% if recent_scans %}
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="padding-left: 20px;">Project Repository</th>
+            <th style="text-align: center;">Files</th>
+            <th style="text-align: center;">Score</th>
+            <th style="text-align: center;">Grade</th>
+            <th style="text-align: center;">Critical</th>
+            <th style="text-align: center;">High</th>
+            <th style="text-align: center;">Medium</th>
+            <th style="text-align: center;">Low</th>
+            <th style="text-align: center;">Findings</th>
+            <th style="text-align: center;">Date</th>
+            <th style="text-align: right; padding-right: 20px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for scan in recent_scans %}
+          <tr>
+            <td style="padding-left: 20px;">
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <a href="{{ url_for('results', scan_id=scan.scan_id) }}"
+                  style="color: #ffffff; font-weight: 700; font-size: 13.5px; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block;"
+                  title="{{ scan.project_name }}">
+                  {{ scan.project_name }}
+                </a>
+                <span style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan);">
+                  {{ scan.scan_id[:8] }}
+                </span>
+              </div>
+            </td>
+            <td style="text-align: center; font-weight: 600; color: var(--text-light);">
+              {{ scan.total_files }}
+            </td>
+            <td style="text-align: center;">
+              <span
+                class="badge-score badge-score-{% if scan.security_score >= 90 %}green{% elif scan.security_score >= 70 %}amber{% else %}rose{% endif %}">
+                {{ scan.security_score }}/100
+              </span>
+            </td>
+            <td style="text-align: center;">
+              <span class="grade-badge grade-{{ scan.rating_grade.lower() }}">{{ scan.rating_grade }}</span>
+            </td>
+            <td style="text-align: center;">
+              <span class="badge-count badge-critical">{{ scan.critical_count }}</span>
+            </td>
+            <td style="text-align: center;">
+              <span class="badge-count badge-high">{{ scan.high_count }}</span>
+            </td>
+            <td style="text-align: center;">
+              <span class="badge-count badge-medium">{{ scan.medium_count }}</span>
+            </td>
+            <td style="text-align: center;">
+              <span class="badge-count badge-low">{{ scan.low_count }}</span>
+            </td>
+            <td style="text-align: center;">
+              <strong style="color: #ffffff; font-size: 13.5px;">{{ scan.total_findings }}</strong>
+            </td>
+            <td
+              style="text-align: center; font-size: 11.5px; color: var(--text-muted); font-family: var(--font-mono); white-space: nowrap;">
+              <div>{{ scan.created_at[:10] }}</div>
+              <div style="opacity: 0.65; font-size: 10.5px;">{{ scan.created_at[11:19] if scan.created_at|length > 11
+                else '' }}</div>
+            </td>
+            <td style="text-align: right; padding-right: 20px; white-space: nowrap;">
+              <div style="display: flex; gap: 5px; justify-content: flex-end; align-items: center;">
+                <a href="{{ url_for('results', scan_id=scan.scan_id) }}" class="btn-sm btn-sm-primary"
+                  title="View Full Scan Findings">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  View
+                </a>
+                <a href="{{ url_for('report', scan_id=scan.scan_id) }}" class="btn-sm btn-sm-outline"
+                  title="Printable Security Report">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                  Report
+                </a>
+                <form action="{{ url_for('delete_scan_route', scan_id=scan.scan_id) }}" method="POST"
+                  onsubmit="return confirm('Delete this scan record permanently?');"
+                  style="display: inline; margin: 0;">
+                  <button type="submit" class="btn-sm btn-sm-danger" title="Delete scan record">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+      <p>No security scans conducted yet. Upload a project ZIP archive or local directory to start auditing!</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

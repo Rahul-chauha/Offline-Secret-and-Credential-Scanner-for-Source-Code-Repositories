@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Security Report: {{ scan.project_name }} | Offline Secret Scanner{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Report Action Bar (Hidden when printing) -->
+  <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin: 24px 0 0;">
+    <a href="{{ url_for('results', scan_id=scan.scan_id) }}" class="btn-outline">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Back to Interactive Dashboard
+    </a>
+
+    <div style="display: flex; gap: 12px;">
+      <button onclick="window.print()" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        Print / Save as PDF
+      </button>
+      <a href="{{ url_for('export_json', scan_id=scan.scan_id) }}" class="btn-outline">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export JSON Report
+      </a>
+    </div>
+  </div>
+
+  <!-- Printable Report Document Body -->
+  <div class="report-wrapper"
+    style="background: #ffffff; color: #0f172a; padding: 40px; border-radius: 8px; margin: 24px 0 60px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+    <div
+      style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px;">
+      <div>
+        <div
+          style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">
+          Academic Session 2026–27 • II-Year Mini Project
+        </div>
+        <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin: 0 0 6px;">Offline Secret and Credential
+          Security Audit Report</h1>
+        <p style="color: #64748b; font-size: 14px; margin: 0;">Pattern-Based Detection &amp; Shannon Entropy Analysis on
+          Local Source Code</p>
+      </div>
+
+      <div style="text-align: right;">
+        <div style="font-size: 12px; color: #64748b;">Security Posture Grade</div>
+        <div style="font-size: 38px; font-weight: 900; color: #0284c7;">Grade {{ scan.rating_grade }}</div>
+        <div style="font-size: 13px; font-weight: 600; color: #475569;">Score: {{ scan.security_score }}/100</div>
+      </div>
+    </div>
+
+    <!-- Metadata Grid -->
+    <div
+      style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; background: #f8fafc; padding: 16px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 28px;">
+      <div>
+        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Repository
+          Name</span>
+        <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 2px;">{{ scan.project_name }}</div>
+      </div>
+      <div>
+        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Scan
+          Identifier</span>
+        <div style="font-size: 12px; font-family: monospace; color: #0284c7; margin-top: 2px;">{{ scan.scan_id }}</div>
+      </div>
+      <div>
+        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Audit Date</span>
+        <div style="font-size: 13px; color: #0f172a; margin-top: 2px;">{{ scan.created_at }}</div>
+      </div>
+      <div>
+        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase;">Files
+          Analyzed</span>
+        <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 2px;">{{ scan.total_files }} Files
+        </div>
+      </div>
+    </div>
+
+    <!-- Executive Severity Summary Table -->
+    <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 12px;">Executive Severity Breakdown
+    </h2>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px;">
+      <thead>
+        <tr style="background: #f1f5f9; text-align: left;">
+          <th style="padding: 10px 14px; border: 1px solid #cbd5e1;">Severity</th>
+          <th style="padding: 10px 14px; border: 1px solid #cbd5e1;">Description</th>
+          <th style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center;">Findings Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 700; color: #e11d48;">Critical</td>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; color: #475569;">Highly sensitive credentials
+            (private keys, live cloud tokens, prod DB URLs)</td>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-weight: 700;">{{
+            scan.critical_count }}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 700; color: #ea580c;">High</td>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; color: #475569;">Potentially exploitable API keys,
+            access tokens, or critical secrets</td>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-weight: 700;">{{
+            scan.high_count }}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 700; color: #d97706;">Medium</td>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; color: #475569;">Suspicious credentials, generic
+            tokens, or high-entropy strings</td>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-weight: 700;">{{
+            scan.medium_count }}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; font-weight: 700; color: #0284c7;">Low</td>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; color: #475569;">Placeholder values, local dev
+            connection URLs (@localhost), or test fixtures</td>
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-weight: 700;">{{
+            scan.low_count }}</td>
+        </tr>
+        <tr style="background: #f8fafc; font-weight: 700;">
+          <td style="padding: 10px 14px; border: 1px solid #cbd5e1;" colspan="2">Total Audited Findings</td>
+          <td
+            style="padding: 10px 14px; border: 1px solid #cbd5e1; text-align: center; font-size: 15px; color: #0f172a;">
+            {{ scan.total_findings }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Detailed Security Findings -->
+    <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 14px;">Detailed Security Findings</h2>
+    {% if scan.findings %}
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      {% for f in scan.findings %}
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0;">#{{ loop.index }} {{ f.title }}</h3>
+          {% set sev_color = '#0284c7' %}
+          {% if f.severity == 'Critical' %}{% set sev_color = '#e11d48' %}
+          {% elif f.severity == 'High' %}{% set sev_color = '#ea580c' %}
+          {% elif f.severity == 'Medium' %}{% set sev_color = '#d97706' %}{% endif %}
+          <span
+            style="font-weight: 800; font-size: 11px; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; color: {{ sev_color }}; background: rgba(0,0,0,0.05);">
+            {{ f.severity }} Severity
+          </span>
+        </div>
+
+        <div style="font-size: 12px; color: #64748b; font-family: monospace; margin-bottom: 8px;">
+          File: {{ f.file_path }} &bull; Line {{ f.line_number }} &bull; Rule: {{ f.rule_id }}
+        </div>
+
+        <p style="font-size: 13px; color: #334155; line-height: 1.5; margin-bottom: 10px;">{{ f.description }}</p>
+
+        {% if f.code_snippet %}
+        <div
+          style="background: #0f172a; color: #38bdf8; padding: 10px 14px; border-radius: 4px; font-family: monospace; font-size: 12px; margin-bottom: 10px; overflow-x: auto;">
+          <code>{{ f.code_snippet }}</code>
+        </div>
+        {% endif %}
+
+        {% if f.remediation %}
+        <div
+          style="background: #fffbeb; border: 1px solid #fef3c7; padding: 10px 14px; border-radius: 4px; font-size: 12.5px; color: #92400e;">
+          <strong>Remediation Guidance:</strong> {{ f.remediation }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div style="padding: 30px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 6px;">
+      No exposed secrets or credentials detected in this repository.
+    </div>
+    {% endif %}
+
+    <div
+      style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 16px; text-align: center; color: #94a3b8; font-size: 12px;">
+      Generated automatically by Offline Secret and Credential Scanner for Source Code Repositories.
+    </div>
+  </div>
+</div>
+{% endblock %}

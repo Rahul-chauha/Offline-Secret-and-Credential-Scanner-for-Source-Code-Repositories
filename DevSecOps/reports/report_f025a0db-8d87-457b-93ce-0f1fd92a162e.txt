@@ -1,0 +1,166 @@
+========================================
+       SECURITY SCAN SUMMARY
+========================================
+
+Files Scanned      : 6
+Files With Findings: 5
+Total Findings     : 15
+
+Critical           : 5
+High               : 1
+Medium             : 5
+Low                : 4
+========================================
+
+DETAILED FINDINGS:
+------------------------------------------------------------
+[1] File: .env.example
+    Line       : 2
+    Type       : Database Credential
+    Severity   : Low
+    Detection  : Pattern Match
+    Confidence : Low
+    Description: Connection string points to a local development or loopback service (e.g. localhost, 127.0.0.1).
+    Snippet    : DATABASE_URL=postgres://user:password@localhost:5432/mydb
+    Remediation: Ensure production environments do not rely on hardcoded local configuration values.
+------------------------------------------------------------
+[2] File: README.md
+    Line       : 9
+    Type       : Database Credential
+    Severity   : Low
+    Detection  : Pattern Match
+    Confidence : Low
+    Description: Connection string points to a local development or loopback service (e.g. localhost, 127.0.0.1).
+    Snippet    : DATABASE_URL=postgres://user:password@localhost:5432/mydb
+    Remediation: Ensure production environments do not rely on hardcoded local configuration values.
+------------------------------------------------------------
+[3] File: config/keys.py
+    Line       : 2
+    Type       : AWS Credential
+    Severity   : Critical
+    Detection  : Pattern Match
+    Confidence : High
+    Description: Amazon Web Services (AWS) Access Key ID detected.
+    Snippet    : AWS_ACCESS_KEY_ID = "AKIA1234567890ABCDEF"
+    Remediation: Deactivate and delete the exposed AWS access key via the AWS IAM Console immediately. Use IAM Roles or AWS Secrets Manager instead.
+------------------------------------------------------------
+[4] File: config/keys.py
+    Line       : 3
+    Type       : AWS Credential
+    Severity   : Critical
+    Detection  : Pattern Match
+    Confidence : High
+    Description: AWS Secret Access Key assignment detected.
+    Snippet    : AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    Remediation: Rotate the secret access key immediately. Migrate to temporary credentials via AWS STS or IAM Instance Profiles.
+------------------------------------------------------------
+[5] File: config/keys.py
+    Line       : 4
+    Type       : GitHub Token
+    Severity   : Critical
+    Detection  : Pattern Match
+    Confidence : High
+    Description: GitHub Personal Access Token (classic or fine-grained) or OAuth token detected.
+    Snippet    : GITHUB_TOKEN = "ghp_1234567890abcdefghijklmnopqrstuvwxyz"
+    Remediation: Revoke the token immediately from your GitHub Account Settings -> Developer settings -> Personal access tokens. Restrict permissions using fine-grained scopes.
+------------------------------------------------------------
+[6] File: config/keys.py
+    Line       : 6
+    Type       : Database Credential
+    Severity   : Critical
+    Detection  : Pattern Match
+    Confidence : High
+    Description: Hardcoded database connection string containing plaintext username and password detected.
+    Snippet    : DATABASE_URL = "postgres://adminuser:SuperSecretProductionPassword2026@db.internal.corp:5432/production_db"
+    Remediation: Externalize database connection strings into secure environment variables (e.g. DATABASE_URL) or secret management systems.
+------------------------------------------------------------
+[7] File: config/keys.py
+    Line       : 8
+    Type       : Private Key
+    Severity   : Critical
+    Detection  : Pattern Match
+    Confidence : High
+    Description: Unencrypted RSA private cryptographic key detected in source code.
+    Snippet    : PRIVATE_KEY = """-----BEGIN RSA PRIVATE KEY-----
+    Remediation: Remove the private key from the codebase, revoke and rotate the corresponding keypair, and inject keys dynamically via secret vaults (e.g., HashiCorp Vault, AWS KMS).
+------------------------------------------------------------
+[8] File: config/keys.py
+    Line       : 3
+    Type       : High-Entropy Secret
+    Severity   : Medium
+    Detection  : Entropy Analysis
+    Confidence : Medium
+    Description: Variable assignment contains a string with high Shannon entropy (4.66), indicating a machine-generated secret or key.
+    Snippet    : AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    Remediation: Verify whether this high-randomness string is an active credential. Externalize to environment variables or secret vaults.
+------------------------------------------------------------
+[9] File: config/keys.py
+    Line       : 4
+    Type       : High-Entropy Secret
+    Severity   : Medium
+    Detection  : Entropy Analysis
+    Confidence : Medium
+    Description: Variable assignment contains a string with high Shannon entropy (5.17), indicating a machine-generated secret or key.
+    Snippet    : GITHUB_TOKEN = "ghp_1234567890abcdefghijklmnopqrstuvwxyz"
+    Remediation: Verify whether this high-randomness string is an active credential. Externalize to environment variables or secret vaults.
+------------------------------------------------------------
+[10] File: src/api_client.py
+    Line       : 4
+    Type       : API Key
+    Severity   : High
+    Detection  : Pattern Match
+    Confidence : High
+    Description: OpenAI API secret key detected.
+    Snippet    : OPENAI_API_KEY = "sk-proj-9876543210abcdef9876543210abcdef123456"
+    Remediation: Revoke the key in the OpenAI API dashboard. Use environment variables to pass API keys at runtime.
+------------------------------------------------------------
+[11] File: src/api_client.py
+    Line       : 7
+    Type       : Generic API Key
+    Severity   : Medium
+    Detection  : Pattern Match
+    Confidence : Medium
+    Description: Generic hardcoded API key or authorization token pattern detected.
+    Snippet    : client_secret = "4f8a9b2c3d1e7f6a5b4c3d2e1f0a9b8c"
+    Remediation: Externalize API keys and secret tokens into environment configurations or a secrets manager.
+------------------------------------------------------------
+[12] File: src/api_client.py
+    Line       : 4
+    Type       : High-Entropy Secret
+    Severity   : Medium
+    Detection  : Entropy Analysis
+    Confidence : Medium
+    Description: Variable assignment contains a string with high Shannon entropy (4.42), indicating a machine-generated secret or key.
+    Snippet    : OPENAI_API_KEY = "sk-proj-9876543210abcdef9876543210abcdef123456"
+    Remediation: Verify whether this high-randomness string is an active credential. Externalize to environment variables or secret vaults.
+------------------------------------------------------------
+[13] File: src/api_client.py
+    Line       : 7
+    Type       : High-Entropy Secret
+    Severity   : Medium
+    Detection  : Entropy Analysis
+    Confidence : Medium
+    Description: Variable assignment contains a string with high Shannon entropy (3.91), indicating a machine-generated secret or key.
+    Snippet    : client_secret = "4f8a9b2c3d1e7f6a5b4c3d2e1f0a9b8c"
+    Remediation: Verify whether this high-randomness string is an active credential. Externalize to environment variables or secret vaults.
+------------------------------------------------------------
+[14] File: tests/test_auth.py
+    Line       : 2
+    Type       : Password Assignment
+    Severity   : Low
+    Detection  : Pattern Match
+    Confidence : Low
+    Description: Obvious placeholder or sample dummy credential detected. Does not pose direct production risk.
+    Snippet    : TEST_PASSWORD = "changeme"
+    Remediation: Ensure test placeholders are replaced with secure secret injection when deploying to staging or production.
+------------------------------------------------------------
+[15] File: tests/test_auth.py
+    Line       : 4
+    Type       : High-Entropy Secret
+    Severity   : Low
+    Detection  : Entropy Analysis
+    Confidence : Low
+    Description: Obvious placeholder or sample dummy credential detected. Does not pose direct production risk.
+    Snippet    : DUMMY_TOKEN = "dummy_token_12345678"
+    Remediation: Ensure test placeholders are replaced with secure secret injection when deploying to staging or production.
+------------------------------------------------------------
